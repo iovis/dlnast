@@ -99,7 +99,6 @@ browser.onDevice(function (device) {
     throw err;
   });
 
-
   client = new Client(device.xml);
   console.log("Sending video to " + device.name);
 
