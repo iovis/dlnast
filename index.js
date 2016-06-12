@@ -5,6 +5,7 @@ var argv    = require('minimist')(process.argv.slice(2)),
     express = require('express'),
     address = require('network-address'),
     Client  = require('upnp-mediarenderer-client'),
+    keypress = require('keypress'),
     path = require('path'),
     mime = require('mime'),
     http = require('http'),
@@ -36,7 +37,7 @@ if (argv.t) {
 }
 
 // Create server
-http.createServer(function (req, res) {
+var server = http.createServer(function (req, res) {
   var video_total = fs.statSync(video_path).size;
   var url = req.url;
 
@@ -86,8 +87,9 @@ http.createServer(function (req, res) {
 
     fs.createReadStream(subs_path).pipe(res);
   }
-}).listen(port, host);
+})
 
+server.listen(port, host);
 console.log("Server started: " + href);
 
 // Send to dlna
@@ -110,9 +112,32 @@ browser.onDevice(function (device) {
     }
   }, function (err, result) {
     if (err) throw err;
-    console.log('playing...');
+    console.log('Playing...');
+    console.log('Press <Space> to Play/Pause and q to quit.');
   });
+
+  paused = false;
+
+  // listen for keypresses
+  keypress(process.stdin);
+  process.stdin.on('keypress', function (ch, key) {
+    if (!key) return;
+
+    if (key.name == 'space') {
+      (paused) ? client.play() : client.pause();
+      paused = !paused;
+    }
+
+    if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
+      client.stop(function () {
+        console.log('Stopped.');
+        server.close();
+        process.exit(0);
+      });
+    }
+  });
+
+  process.stdin.setRawMode(true)
 });
 
 browser.start();
-
