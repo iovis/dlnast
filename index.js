@@ -1,31 +1,53 @@
 #!/usr/bin/env node
 
-var argv    = require('minimist')(process.argv.slice(2)),
+var address = require('network-address'),
     Browser = require('nodecast-js'),
-    express = require('express'),
-    address = require('network-address'),
     Client  = require('upnp-mediarenderer-client'),
-    keypress = require('keypress'),
-    path = require('path'),
-    mime = require('mime'),
-    http = require('http'),
+    fs = require('fs'),
     glob = require('glob'),
-    fs = require('fs');
+    http = require('http'),
+    keypress = require('keypress'),
+    mime = require('mime'),
+    optimist = require('optimist'),
+    path = require('path'),
+    rc = require('rc');
+
+process.title = 'dlnast';
+
+var argv = rc('dlnast', {}, optimist
+  .usage('Usage: $0 [options] file')
+  .alias('s', 'auto-sub').describe('s', 'auto load subtitles with the same video name').boolean('s')
+  .alias('t', 'sub-file').describe('t', 'load subtitles file')
+  .alias('p', 'port').describe('p', 'change the server port').default('p', 8888)
+  .alias('v', 'version').describe('v', 'prints current version').boolean('v')
+  .argv)
+
+if (argv.version) {
+  console.error(require('./package').version)
+  process.exit(0)
+}
+
+// If no filename, show help
+var video_path = argv._[0];
+if (!video_path) {
+  optimist.showHelp()
+  process.exit(1)
+}
 
 var host = address(),
-    port = 8888,
+    port = argv.port,
     href = "http://" + host + ":" + port + "/",
-    video_path = argv._[0],
     filename = path.basename(video_path)
     video_mime = mime.lookup(video_path);
 
-// If discover subtitles
+// If auto load subtitles
 if (argv.s) {
   var ext = path.extname(video_path),
       basename = path.basename(video_path, ext),
       glob_pattern = basename + '!(*' + ext + ')',  // 'filename!(*.mkv)'
       subs_files = glob.sync(path.join(path.dirname(video_path), glob_pattern));
 
+  // Overwrite the 't' parameter if file found
   if (subs_files.length) argv.t = subs_files[0];
 }
 
@@ -100,7 +122,8 @@ browser.onDevice(function (device) {
   });
 
   client = new Client(device.xml);
-  console.log("Sending video to " + device.name);
+  console.log("Sending " + filename + " to " + device.name);
+  if (subtitles_url) console.log("Subtitles file " + subs_path)
 
   client.load(href, {
     autoplay: true,
