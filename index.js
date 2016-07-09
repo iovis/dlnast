@@ -49,13 +49,13 @@ var server = http.createServer(function (req, res) {
 
     var start = parseInt(partialstart, 10);
     var end = partialend ? parseInt(partialend, 10) : total-1;
-    var chunksize = (end-start)+1;
+    var chunksize = (end - start) + 1;
     console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
     var file = fs.createReadStream(video_path, {start: start, end: end});
 
     res.writeHead(206, {
-      'Content-Range': 'bytes ' + start + '-' + end + '/' + total,
+      'Content-Range': 'bytes ' + start + '-' + end + '/' + video_total,
       'Accept-Ranges': 'bytes',
       'Content-Length': chunksize,
       'Content-Type': video_mime
