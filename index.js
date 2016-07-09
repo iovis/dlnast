@@ -2,7 +2,8 @@
 
 var address = require('network-address'),
     Browser = require('nodecast-js'),
-    Client  = require('upnp-mediarenderer-client'),
+    Client = require('upnp-mediarenderer-client'),
+    clivas = require('clivas'),
     fs = require('fs'),
     glob = require('glob'),
     http = require('http'),
@@ -23,7 +24,7 @@ var argv = rc('dlnast', {}, optimist
   .argv)
 
 if (argv.version) {
-  console.error(require('./package').version)
+  console.log(require('./package').version)
   process.exit(0)
 }
 
@@ -72,7 +73,7 @@ var server = http.createServer(function (req, res) {
     var start = parseInt(partialstart, 10);
     var end = partialend ? parseInt(partialend, 10) : total-1;
     var chunksize = (end - start) + 1;
-    console.log('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
+    // clivas.line('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
     var file = fs.createReadStream(video_path, {start: start, end: end});
 
@@ -112,7 +113,8 @@ var server = http.createServer(function (req, res) {
 })
 
 server.listen(port, host);
-console.log("Server started: " + href);
+clivas.clear()
+clivas.line('{green:Server started at }' + '{blue:' + href + '}');
 
 // Send to dlna
 var browser = new Browser();
@@ -122,8 +124,8 @@ browser.onDevice(function (device) {
   });
 
   client = new Client(device.xml);
-  console.log("Sending " + filename + " to " + device.name);
-  if (subtitles_url) console.log("Subtitles file " + subs_path)
+  clivas.line('{green:Sending }' + '{blue:' + filename + '}' + '{green: to }' + '{blue:' + device.name + '}');
+  if (subtitles_url) clivas.line("{green:Subtitles file }" + '{blue:' + subs_path + '}')
 
   client.load(href, {
     autoplay: true,
@@ -134,8 +136,8 @@ browser.onDevice(function (device) {
     }
   }, function (err, result) {
     if (err) throw err;
-    console.log('Playing...');
-    console.log('Press <Space> to Play/Pause and q to quit.');
+    clivas.line('{green:Playing...}');
+    clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
   });
 
   paused = false;
@@ -152,7 +154,7 @@ browser.onDevice(function (device) {
 
     if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
       client.stop(function () {
-        console.log('Stopped.');
+        clivas.line('{red:Stopped}');
         server.close();
         process.exit(0);
       });
