@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 var address = require('network-address'),
-    Browser = require('nodecast-js'),
-    Client = require('upnp-mediarenderer-client'),
-    clivas = require('clivas'),
-    fs = require('fs'),
-    glob = require('glob'),
-    http = require('http'),
-    keypress = require('keypress'),
-    mime = require('mime'),
-    optimist = require('optimist'),
-    path = require('path'),
-    rc = require('rc');
+  Browser = require('nodecast-js'),
+  Client = require('upnp-mediarenderer-client'),
+  clivas = require('clivas'),
+  fs = require('fs'),
+  glob = require('glob'),
+  http = require('http'),
+  keypress = require('keypress'),
+  mime = require('mime'),
+  optimist = require('optimist'),
+  path = require('path'),
+  rc = require('rc');
 
 process.title = 'dlnast';
 
@@ -21,32 +21,32 @@ var argv = rc('dlnast', {}, optimist
   .alias('t', 'sub-file').describe('t', 'load subtitles file')
   .alias('p', 'port').describe('p', 'change the server port').default('p', 8888)
   .alias('v', 'version').describe('v', 'prints current version').boolean('v')
-  .argv)
+  .argv);
 
 if (argv.version) {
-  console.log(require('./package').version)
-  process.exit(0)
+  console.log(require('./package').version);
+  process.exit(0);
 }
 
 // If no filename, show help
 var video_path = argv._[0];
 if (!video_path) {
-  optimist.showHelp()
-  process.exit(1)
+  optimist.showHelp();
+  process.exit(1);
 }
 
 var host = address(),
-    port = argv.port,
-    href = "http://" + host + ":" + port + "/",
-    filename = path.basename(video_path)
-    video_mime = mime.lookup(video_path);
+  port = argv.port,
+  href = 'http://' + host + ':' + port + '/',
+  filename = path.basename(video_path),
+  video_mime = mime.lookup(video_path);
 
 // If auto load subtitles
 if (argv.s) {
   var ext = path.extname(video_path),
-      basename = path.basename(video_path, ext),
-      glob_pattern = basename + '!(*' + ext + ')',  // 'filename!(*.mkv)'
-      subs_files = glob.sync(path.join(path.dirname(video_path), glob_pattern));
+    basename = path.basename(video_path, ext),
+    glob_pattern = basename + '!(*' + ext + ')',  // 'filename!(*.mkv)'
+    subs_files = glob.sync(path.join(path.dirname(video_path), glob_pattern));
 
   // Overwrite the 't' parameter if file found
   if (subs_files.length) argv.t = subs_files[0];
@@ -55,8 +55,8 @@ if (argv.s) {
 // If subtitles given
 if (argv.t) {
   var subs_path = argv.t,
-      subtitles_url = href + "subtitles",
-      subs_mime = mime.lookup(subs_path);
+    subtitles_url = href + 'subtitles',
+    subs_mime = mime.lookup(subs_path);
 }
 
 // Create server
@@ -66,7 +66,7 @@ var server = http.createServer(function (req, res) {
 
   if (req.headers.range) {   // meaning client (browser) has moved the forward/back slider
     var range = req.headers.range;
-    var parts = range.replace(/bytes=/, "").split("-");
+    var parts = range.replace(/bytes=/, '').split('-');
     var partialstart = parts[0];
     var partialend = parts[1];
 
@@ -110,10 +110,10 @@ var server = http.createServer(function (req, res) {
 
     fs.createReadStream(subs_path).pipe(res);
   }
-})
+});
 
 server.listen(port, host);
-clivas.clear()
+clivas.clear();
 clivas.line('{green:Server started at }' + '{blue:' + href + '}');
 
 // Send to dlna
@@ -123,9 +123,9 @@ browser.onDevice(function (device) {
     throw err;
   });
 
-  client = new Client(device.xml);
+  var client = new Client(device.xml);
   clivas.line('{green:Sending }' + '{blue:' + filename + '}' + '{green: to }' + '{blue:' + device.name + '}');
-  if (subtitles_url) clivas.line("{green:Subtitles file }" + '{blue:' + subs_path + '}')
+  if (subtitles_url) clivas.line('{green:Subtitles file }' + '{blue:' + subs_path + '}');
 
   client.load(href, {
     autoplay: true,
@@ -140,7 +140,7 @@ browser.onDevice(function (device) {
     clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
   });
 
-  paused = false;
+  var paused = false;
 
   // listen for keypresses
   keypress(process.stdin);
@@ -161,7 +161,7 @@ browser.onDevice(function (device) {
     }
   });
 
-  process.stdin.setRawMode(true)
+  process.stdin.setRawMode(true);
 });
 
 browser.start();
