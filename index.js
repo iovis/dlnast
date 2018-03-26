@@ -71,7 +71,7 @@ var server = http.createServer(function (req, res) {
     var partialend = parts[1];
 
     var start = parseInt(partialstart, 10);
-    var end = partialend ? parseInt(partialend, 10) : total-1;
+    var end = partialend ? parseInt(partialend, 10) : video_total-1;
     var chunksize = (end - start) + 1;
     // clivas.line('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
@@ -88,13 +88,16 @@ var server = http.createServer(function (req, res) {
   }
 
   if (url === '/') {
-    res.writeHead(200, {
+    const headers = {
       'Content-Length': video_total,
       'transferMode.dlna.org': 'Streaming',
       'contentFeatures.dlna.org': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000',
-      'CaptionInfo.sec': subtitles_url,
       'Content-Type': video_mime
-    });
+    };
+
+    if (argv.t) headers['CaptionInfo.sec'] = subtitles_url;
+
+    res.writeHead(200, headers);
 
     fs.createReadStream(video_path).pipe(res);
   } else if (argv.t && url === '/subtitles') {
