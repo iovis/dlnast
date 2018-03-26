@@ -42,10 +42,6 @@ if (!video) {
   process.exit(1);
 }
 
-const host = address();
-const port = argv.port;
-const serverUrl = `http://${host}:${port}/`;
-
 // If auto load subtitles
 if (argv.s) {
   const globPattern = `${video.basename}!(*${video.extension})`;  // 'filename!(*.mkv)'
@@ -56,13 +52,17 @@ if (argv.s) {
 }
 
 // If subtitles given
+let subtitles;
 if (argv.t) {
-  var subs_path = argv.t,
-    subtitles_url = serverUrl + 'subtitles',
-    subs_mime = mime.getType(subs_path);
+  subtitles = fileInfo(argv.t);
 }
 
 // Create server
+const host = address();
+const port = argv.port;
+const serverUrl = `http://${host}:${port}/`;
+const subtitlesUrl = serverUrl + 'subtitles';
+
 var server = http.createServer(function (req, res) {
   var url = req.url;
 
@@ -97,23 +97,23 @@ var server = http.createServer(function (req, res) {
       'Content-Type': video.mime
     };
 
-    if (argv.t) headers['CaptionInfo.sec'] = subtitles_url;
+    if (subtitles) headers['CaptionInfo.sec'] = subtitlesUrl;
 
     res.writeHead(200, headers);
 
     fs.createReadStream(video.path).pipe(res);
-  } else if (argv.t && url === '/subtitles') {
-    var subs_total = fs.statSync(subs_path).size;
+  } else if (subtitles && url === '/subtitles') {
+    var subs_total = fs.statSync(subtitles.path).size;
 
     res.writeHead(200, {
       'Content-Length': subs_total,
       'transferMode.dlna.org': 'Streaming',
       'contentFeatures.dlna.org': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000',
-      'CaptionInfo.sec': subtitles_url,
-      'Content-Type': subs_mime
+      'CaptionInfo.sec': subtitlesUrl,
+      'Content-Type': subtitles.mime
     });
 
-    fs.createReadStream(subs_path).pipe(res);
+    fs.createReadStream(subtitles.path).pipe(res);
   }
 });
 
@@ -128,9 +128,9 @@ dlnacasts.on('update', function (player) {
   const options = { title: video.path, type: video.mime };
   clivas.line('{green:Sending }' + '{blue:' + video.path + '}' + '{green: to }' + '{blue:' + player.name + '}');
 
-  if (subtitles_url) {
-    clivas.line('{green:Subtitles file }' + '{blue:' + subs_path + '}');
-    options.subtitles = [subtitles_url];
+  if (subtitles) {
+    clivas.line('{green:Subtitles file }' + '{blue:' + subtitles.path + '}');
+    options.subtitles = [subtitlesUrl];
   }
 
   player.play(serverUrl, options);
