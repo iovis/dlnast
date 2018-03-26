@@ -3,11 +3,11 @@
 const address = require('network-address');
 const clivas = require('clivas');
 const glob = require('glob');
-const keypress = require('keypress');
 const optimist = require('optimist');
 const path = require('path');
 const rc = require('rc');
 
+const Dlna = require('./src/Dlna');
 const fileInfo = require('./src/fileInfo');
 const mediaServer = require('./src/mediaServer');
 
@@ -58,50 +58,15 @@ if (argv.t) {
 // Create server
 const host = address();
 const port = argv.port;
-const serverUrl = `http://${host}:${port}/`;
-if (subtitles) subtitles.url = serverUrl + 'subtitles';
+
+video.url = `http://${host}:${port}/`;
+if (subtitles) subtitles.url = video.url + 'subtitles';
 
 const server = mediaServer(video, subtitles);
 server.listen(port, host);
 
 clivas.clear();
-clivas.line('{green:Server started at }' + '{blue:' + serverUrl + '}');
+clivas.line(`{green:Server started at} {blue:${video.url}}`);
 
-// Send to dlna
-const dlnacasts = require('dlnacasts')();
-
-dlnacasts.on('update', function (player) {
-  const options = { title: video.path, type: video.mime };
-  clivas.line('{green:Sending }' + '{blue:' + video.path + '}' + '{green: to }' + '{blue:' + player.name + '}');
-
-  if (subtitles) {
-    clivas.line('{green:Subtitles file }' + '{blue:' + subtitles.path + '}');
-    options.subtitles = [subtitles.url];
-  }
-
-  player.play(serverUrl, options);
-
-  var paused = false;
-  clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
-
-  // listen for keypresses
-  keypress(process.stdin);
-  process.stdin.on('keypress', function (ch, key) {
-    if (!key) return;
-
-    if (key.name == 'space') {
-      (paused) ? player.resume() : player.pause();
-      paused = !paused;
-    }
-
-    if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
-      player.stop(function () {
-        clivas.line('{red:Stopped}');
-        server.close();
-        process.exit(0);
-      });
-    }
-  });
-
-  process.stdin.setRawMode(true);
-});
+const dlna = new Dlna();
+dlna.start({ video, subtitles, server });
