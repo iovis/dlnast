@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
-var address = require('network-address'),
-  clivas = require('clivas'),
-  fs = require('fs'),
-  glob = require('glob'),
-  http = require('http'),
-  keypress = require('keypress'),
-  mime = require('mime'),
-  optimist = require('optimist'),
-  path = require('path'),
-  rc = require('rc');
+const address = require('network-address');
+const clivas = require('clivas');
+const fs = require('fs');
+const glob = require('glob');
+const http = require('http');
+const keypress = require('keypress');
+const mime = require('mime');
+const optimist = require('optimist');
+const path = require('path');
+const rc = require('rc');
+
+const fileInfo = require('./src/fileInfo');
 
 process.title = 'dlnast';
 
@@ -27,39 +29,41 @@ if (argv.version) {
 }
 
 // If no filename, show help
-var video_path = argv._[0];
-if (!video_path) {
+var videoPath = argv._[0];
+if (!videoPath) {
   optimist.showHelp();
   process.exit(1);
 }
 
-var host = address(),
-  port = argv.port,
-  href = 'http://' + host + ':' + port + '/',
-  filename = path.basename(video_path),
-  video_mime = mime.getType(video_path);
+const video = fileInfo(videoPath);
+
+if (!video) {
+  clivas.line('{red:File not found}');
+  process.exit(1);
+}
+
+const host = address();
+const port = argv.port;
+const serverUrl = `http://${host}:${port}/`;
 
 // If auto load subtitles
 if (argv.s) {
-  var ext = path.extname(video_path),
-    basename = path.basename(video_path, ext),
-    glob_pattern = basename + '!(*' + ext + ')',  // 'filename!(*.mkv)'
-    subs_files = glob.sync(path.join(path.dirname(video_path), glob_pattern));
+  const globPattern = `${video.basename}!(*${video.extension})`;  // 'filename!(*.mkv)'
+  const subsFiles = glob.sync(path.join(path.dirname(video.path), globPattern));
 
   // Overwrite the 't' parameter if file found
-  if (subs_files.length) argv.t = subs_files[0];
+  if (subsFiles.length) argv.t = subsFiles[0];
 }
 
 // If subtitles given
 if (argv.t) {
   var subs_path = argv.t,
-    subtitles_url = href + 'subtitles',
+    subtitles_url = serverUrl + 'subtitles',
     subs_mime = mime.getType(subs_path);
 }
 
 // Create server
 var server = http.createServer(function (req, res) {
-  var video_total = fs.statSync(video_path).size;
   var url = req.url;
 
   if (req.headers.range) {   // meaning client (browser) has moved the forward/back slider
@@ -69,17 +73,17 @@ var server = http.createServer(function (req, res) {
     var partialend = parts[1];
 
     var start = parseInt(partialstart, 10);
-    var end = partialend ? parseInt(partialend, 10) : video_total-1;
+    var end = partialend ? parseInt(partialend, 10) : video.size - 1;
     var chunksize = (end - start) + 1;
     // clivas.line('RANGE: ' + start + ' - ' + end + ' = ' + chunksize);
 
-    var file = fs.createReadStream(video_path, {start: start, end: end});
+    var file = fs.createReadStream(video.path, {start: start, end: end});
 
     res.writeHead(206, {
-      'Content-Range': 'bytes ' + start + '-' + end + '/' + video_total,
+      'Content-Range': 'bytes ' + start + '-' + end + '/' + video.size,
       'Accept-Ranges': 'bytes',
       'Content-Length': chunksize,
-      'Content-Type': video_mime
+      'Content-Type': video.mime
     });
 
     file.pipe(res);
@@ -87,17 +91,17 @@ var server = http.createServer(function (req, res) {
 
   if (url === '/') {
     const headers = {
-      'Content-Length': video_total,
+      'Content-Length': video.size,
       'transferMode.dlna.org': 'Streaming',
       'contentFeatures.dlna.org': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000',
-      'Content-Type': video_mime
+      'Content-Type': video.mime
     };
 
     if (argv.t) headers['CaptionInfo.sec'] = subtitles_url;
 
     res.writeHead(200, headers);
 
-    fs.createReadStream(video_path).pipe(res);
+    fs.createReadStream(video.path).pipe(res);
   } else if (argv.t && url === '/subtitles') {
     var subs_total = fs.statSync(subs_path).size;
 
@@ -115,21 +119,21 @@ var server = http.createServer(function (req, res) {
 
 server.listen(port, host);
 clivas.clear();
-clivas.line('{green:Server started at }' + '{blue:' + href + '}');
+clivas.line('{green:Server started at }' + '{blue:' + serverUrl + '}');
 
 // Send to dlna
 const dlnacasts = require('dlnacasts')();
 
 dlnacasts.on('update', function (player) {
-  const options = { title: filename, type: video_mime };
-  clivas.line('{green:Sending }' + '{blue:' + filename + '}' + '{green: to }' + '{blue:' + player.name + '}');
+  const options = { title: video.path, type: video.mime };
+  clivas.line('{green:Sending }' + '{blue:' + video.path + '}' + '{green: to }' + '{blue:' + player.name + '}');
 
   if (subtitles_url) {
     clivas.line('{green:Subtitles file }' + '{blue:' + subs_path + '}');
     options.subtitles = [subtitles_url];
   }
 
-  player.play(href, options);
+  player.play(serverUrl, options);
 
   var paused = false;
   clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
