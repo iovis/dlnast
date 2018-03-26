@@ -39,7 +39,7 @@ var host = address(),
   port = argv.port,
   href = 'http://' + host + ':' + port + '/',
   filename = path.basename(video_path),
-  video_mime = mime.lookup(video_path);
+  video_mime = mime.getType(video_path);
 
 // If auto load subtitles
 if (argv.s) {
@@ -56,7 +56,7 @@ if (argv.s) {
 if (argv.t) {
   var subs_path = argv.t,
     subtitles_url = href + 'subtitles',
-    subs_mime = mime.lookup(subs_path);
+    subs_mime = mime.getType(subs_path);
 }
 
 // Create server
