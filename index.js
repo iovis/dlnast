@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
 var address = require('network-address'),
-  Browser = require('nodecast-js'),
-  Client = require('upnp-mediarenderer-client'),
   clivas = require('clivas'),
   fs = require('fs'),
   glob = require('glob'),
@@ -120,30 +118,21 @@ clivas.clear();
 clivas.line('{green:Server started at }' + '{blue:' + href + '}');
 
 // Send to dlna
-var browser = new Browser();
-browser.onDevice(function (device) {
-  device.onError(function (err) {
-    throw err;
-  });
+const dlnacasts = require('dlnacasts')();
 
-  var client = new Client(device.xml);
-  clivas.line('{green:Sending }' + '{blue:' + filename + '}' + '{green: to }' + '{blue:' + device.name + '}');
-  if (subtitles_url) clivas.line('{green:Subtitles file }' + '{blue:' + subs_path + '}');
+dlnacasts.on('update', function (player) {
+  const options = { title: filename, type: video_mime };
+  clivas.line('{green:Sending }' + '{blue:' + filename + '}' + '{green: to }' + '{blue:' + player.name + '}');
 
-  client.load(href, {
-    autoplay: true,
-    metadata: {
-      title: filename,
-      type: 'video',
-      subtitlesUrl: subtitles_url || false
-    }
-  }, function (err, result) {
-    if (err) throw err;
-    clivas.line('{green:Playing...}');
-    clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
-  });
+  if (subtitles_url) {
+    clivas.line('{green:Subtitles file }' + '{blue:' + subs_path + '}');
+    options.subtitles = [subtitles_url];
+  }
+
+  player.play(href, options);
 
   var paused = false;
+  clivas.line('{green:Press }' + '{blue:<Space> }' + '{green:to Play/Pause and }' + '{blue:q }' + '{green:to quit}');
 
   // listen for keypresses
   keypress(process.stdin);
@@ -151,12 +140,12 @@ browser.onDevice(function (device) {
     if (!key) return;
 
     if (key.name == 'space') {
-      (paused) ? client.play() : client.pause();
+      (paused) ? player.resume() : player.pause();
       paused = !paused;
     }
 
     if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
-      client.stop(function () {
+      player.stop(function () {
         clivas.line('{red:Stopped}');
         server.close();
         process.exit(0);
@@ -166,5 +155,3 @@ browser.onDevice(function (device) {
 
   process.stdin.setRawMode(true);
 });
-
-browser.start();
