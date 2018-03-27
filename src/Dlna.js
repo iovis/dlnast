@@ -5,16 +5,15 @@ const keypress  = require('keypress');
 class Dlna {
   constructor() {
     this.dlnacasts = Dlnacasts();
-    this._bindPlayer = this._bindPlayer.bind(this);
+    this.startPlayer = this.startPlayer.bind(this);
   }
 
   start({ video, subtitles, server }) {
-    this.dlnacasts.on('update', player => this._bindPlayer({ player, video, subtitles, server }));
+    this.dlnacasts.on('update', player => this.startPlayer({ player, video, subtitles, server }));
   }
 
-  // private
 
-  _bindPlayer({ player, video, subtitles, server }) {
+  startPlayer({ player, video, subtitles, server }) {
     clivas.line(`{green:Sending} {blue:${video.path}} {green:to} {blue:${player.name}}`);
 
     const options = { title: video.path, type: video.mime };
@@ -30,6 +29,8 @@ class Dlna {
 
     this._bindKeys({ player, server });
   }
+
+  // private
 
   _bindKeys({ player, server }) {
     let paused = false;
