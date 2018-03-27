@@ -27,8 +27,10 @@
     "commander": "^2.15.1",
     "dlnacasts": "^0.1.0",
     "glob": "^7.0.3",
+    "inquirer": "^5.2.0",
     "keypress": "^0.2.1",
     "mime": "^2.2.0",
-    "network-address": "^1.1.0"
+    "network-address": "^1.1.0",
+    "ora": "^2.0.0"
   }
 }
