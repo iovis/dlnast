@@ -24,12 +24,11 @@
   "homepage": "https://github.com/iovis9/dlnast",
   "dependencies": {
     "clivas": "^0.2.0",
+    "commander": "^2.15.1",
     "dlnacasts": "^0.1.0",
     "glob": "^7.0.3",
     "keypress": "^0.2.1",
     "mime": "^2.2.0",
-    "network-address": "^1.1.0",
-    "optimist": "^0.6.1",
-    "rc": "^1.1.6",
+    "network-address": "^1.1.0"
   }
 }

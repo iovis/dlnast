@@ -3,9 +3,8 @@
 const address = require('network-address');
 const clivas = require('clivas');
 const glob = require('glob');
-const optimist = require('optimist');
 const path = require('path');
-const rc = require('rc');
+const program = require('commander');
 
 const Dlna = require('./src/Dlna');
 const fileInfo = require('./src/fileInfo');
@@ -13,51 +12,40 @@ const mediaServer = require('./src/mediaServer');
 
 process.title = 'dlnast';
 
-const argv = rc('dlnast', {}, optimist
-  .usage('Usage: $0 [options] file')
-  .alias('s', 'auto-sub').describe('s', 'auto load subtitles with the same video name').boolean('s')
-  .alias('t', 'sub-file').describe('t', 'load subtitles file')
-  .alias('p', 'port').describe('p', 'change the server port').default('p', 8888)
-  .alias('v', 'version').describe('v', 'prints current version').boolean('v')
-  .argv);
+program
+  .version(require('./package').version, '-v, --version')
+  .description('Stream your favorite media to a DLNA device in your local network')
+  .usage('[options] <file>')
+  .option('-s, --subtitles [file]', 'Add subtitles or auto load subtitles file with the same name')
+  .option('-p, --port <port>', 'Change media server port', parseInt, 8888)
+  .parse(process.argv);
 
-if (argv.version) {
-  console.log(require('./package').version);
-  process.exit(0);
-}
 
-// If no filename, show help
-const videoPath = argv._[0];
-if (!videoPath) {
-  optimist.showHelp();
-  process.exit(1);
-}
+// If not passed one argument, show help
+if (program.args.length !== 1) program.help();
 
-const video = fileInfo(videoPath);
-
+const video = fileInfo(program.args[0]);
 if (!video) {
   clivas.line('{red:File not found}');
   process.exit(1);
 }
 
-// If auto load subtitles
-if (argv.s) {
-  const globPattern = `${video.basename}!(*${video.extension})`;  // 'filename!(*.mkv)'
-  const subsFiles = glob.sync(path.join(path.dirname(video.path), globPattern));
-
-  // Overwrite the 't' parameter if file found
-  if (subsFiles.length) argv.t = subsFiles[0];
-}
-
-// If subtitles given
 let subtitles;
-if (argv.t) {
-  subtitles = fileInfo(argv.t);
+if (program.subtitles) {
+  subtitles = fileInfo(program.subtitles);
+
+  if (!subtitles) {
+    // Select same filename but different extensions: filename!(*.mkv)
+    const globPattern = `${video.basename}!(*${video.extension})`;
+    const subsFiles = glob.sync(path.join(path.dirname(video.path), globPattern));
+
+    subtitles = fileInfo(subsFiles[0]);
+  }
 }
 
 // Create server
 const host = address();
-const port = argv.port;
+const port = program.port;
 
 video.url = `http://${host}:${port}/`;
 if (subtitles) subtitles.url = video.url + 'subtitles';
