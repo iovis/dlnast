@@ -1,6 +1,8 @@
 const address = require('network-address');
 const clivas = require('clivas');
 const glob = require('glob');
+const inquirer = require('inquirer');
+const ora = require('ora');
 const path = require('path');
 
 const Dlna = require('./Dlna');
@@ -18,11 +20,11 @@ class CLI {
     this.server = this._initServer();
     this.dlna = new Dlna();
 
-    this.dlna.start({
-      video: this.video,
-      subtitles: this.subtitles,
-      server: this.server
-    });
+    if (this.program.list) {
+      this._choosePlayer();
+    } else {
+      this._chooseFirstPlayer();
+    }
   }
 
   // private
@@ -68,6 +70,47 @@ class CLI {
     clivas.line(`{green:Server started at} {blue:${this.video.url}}`);
 
     return server;
+  }
+
+  _chooseFirstPlayer() {
+    this.dlna.start({
+      video: this.video,
+      subtitles: this.subtitles,
+      server: this.server
+    });
+  }
+
+  async _choosePlayer() {
+    // search for players
+    const spinner = ora('Searching for devices...').start();
+    const players = await this.dlna.searchPlayers();
+    spinner.stop();
+
+    if (players.length === 0) {
+      clivas.line("{red:Couldn't find any devices}");
+      process.exit();
+    }
+
+    // offer choice
+    try {
+      var { player } = await inquirer.prompt({
+        type: 'list',
+        name: 'player',
+        message: 'Choose a player',
+        choices: players,
+        filter: (choice) => players.find(player => player.name === choice)
+      });
+    } catch (error) {
+      clivas.line('{red:Interrupted}');
+    }
+
+    // stream to player
+    this.dlna.startPlayer({
+      player,
+      video: this.video,
+      subtitles: this.subtitles,
+      server: this.server
+    });
   }
 }
 
