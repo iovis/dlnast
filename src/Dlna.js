@@ -1,6 +1,7 @@
 const Dlnacasts = require('dlnacasts');
 const clivas    = require('clivas');
 const keypress  = require('keypress');
+const sleep     = require('./sleep');
 
 class Dlna {
   constructor() {
@@ -12,6 +13,19 @@ class Dlna {
     this.dlnacasts.on('update', player => this.startPlayer({ player, video, subtitles, server }));
   }
 
+  searchPlayers() {
+    return new Promise(async (resolve, reject) => {
+      if (this.dlnacasts.players.length) resolve(this.dlnacasts.players);
+
+      try {
+        this.dlnacasts.update();
+        await sleep(2000);
+        resolve(this.dlnacasts.players);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
 
   startPlayer({ player, video, subtitles, server }) {
     clivas.line(`{green:Sending} {blue:${video.path}} {green:to} {blue:${player.name}}`);
