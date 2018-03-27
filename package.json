@@ -1,7 +1,7 @@
 {
   "name": "dlnast",
   "version": "1.0.0",
-  "description": "send your videos to your DLNA devices",
+  "description": "Stream your favorite media to a DLNA device in your local network",
   "main": "index.js",
   "bin": {
     "dlnast": "./index.js"
