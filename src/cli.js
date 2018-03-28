@@ -18,13 +18,7 @@ class CLI {
     this.video = this._initVideo();
     this.subtitles = this._initSubtitles();
     this.server = this._initServer();
-    this.dlna = new Dlna();
-
-    if (this.program.list) {
-      this._choosePlayer();
-    } else {
-      this._chooseFirstPlayer();
-    }
+    if (this.program.dlna) this._initDlna();
   }
 
   // private
@@ -65,11 +59,19 @@ class CLI {
 
     const server = mediaServer(this.video, this.subtitles);
     server.listen(port, host);
-
-    clivas.clear();
     clivas.line(`{green:Server started at} {blue:${this.video.url}}`);
 
     return server;
+  }
+
+  _initDlna() {
+    this.dlna = new Dlna();
+
+    if (this.program.list) {
+      this._choosePlayer();
+    } else {
+      this._chooseFirstPlayer();
+    }
   }
 
   _chooseFirstPlayer() {
@@ -87,7 +89,7 @@ class CLI {
     spinner.stop();
 
     if (players.length === 0) {
-      clivas.line("{red:Couldn't find any devices}");
+      clivas.line('{red:Couldn\'t find any devices}');
       process.exit();
     }
 
