@@ -1,5 +1,5 @@
 const address = require('network-address');
-const clivas = require('clivas');
+const chalk = require('chalk');
 const glob = require('glob');
 const inquirer = require('inquirer');
 const ora = require('ora');
@@ -27,7 +27,7 @@ class CLI {
     const video = fileInfo(this.program.args[0]);
 
     if (!video) {
-      clivas.line('{red:File not found}');
+      console.log(chalk.red('File not found'));
       process.exit(1);
     }
 
@@ -58,8 +58,8 @@ class CLI {
     if (this.subtitles) this.subtitles.url = this.video.url + 'subtitles';
 
     const server = mediaServer(this.video, this.subtitles);
-    server.listen(port, host);
-    clivas.line(`{green:Server started at} {blue:${this.video.url}}`);
+    server.listen(port, '0.0.0.0');
+    console.log(`Server started at ${chalk.blue(this.video.url)}`);
 
     return server;
   }
@@ -89,7 +89,7 @@ class CLI {
     spinner.stop();
 
     if (players.length === 0) {
-      clivas.line('{red:Couldn\'t find any devices}');
+      console.log(chalk.red("Couldn't find any devices"));
       process.exit();
     }
 
@@ -103,7 +103,7 @@ class CLI {
         filter: (choice) => players.find(player => player.name === choice)
       });
     } catch (error) {
-      clivas.line('{red:Interrupted}');
+      console.log(chalk.red('Interrupted'));
     }
 
     // stream to player

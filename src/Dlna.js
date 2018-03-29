@@ -1,5 +1,5 @@
 const Dlnacasts = require('dlnacasts');
-const clivas    = require('clivas');
+const chalk     = require('chalk');
 const ora       = require('ora');
 const readline  = require('readline');
 const sleep     = require('./sleep');
@@ -34,18 +34,20 @@ class Dlna {
   }
 
   startPlayer({ player, video, subtitles, server }) {
-    clivas.line(`{green:Sending} {blue:${video.path}} {green:to} {blue:${player.name}}`);
-
     const options = { title: video.path, type: video.mime };
+    let info = `Sending ${chalk.blue(video.path)} to ${chalk.blue(player.name)} `;
 
     if (subtitles) {
       options.subtitles = [subtitles.url];
-      clivas.line(`{green:Subtitles file} {blue:${subtitles.path}}`);
+      info += `with subtitles ${chalk.blue(subtitles.path)}`;
     }
 
     player.play(video.url, options);
 
-    clivas.line('{green:Press} {blue:<Space>} {green:to Play/Pause and} {blue:q} {green:to quit}');
+    console.log(info);
+    console.log('\nUsage:');
+    console.log(`Press ${chalk.blue('<Space>')} to Play/Pause`);
+    console.log(`Press ${chalk.blue('q')} to quit`);
 
     this._bindKeys({ player, server });
   }
@@ -65,7 +67,7 @@ class Dlna {
 
       if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
         player.stop(() => {
-          clivas.line('{red:Stopped}');
+          console.log(chalk.red('Stopped'));
           server.close();
           process.exit(0);
         });

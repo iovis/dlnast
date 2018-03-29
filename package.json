@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/iovis9/dlnast",
   "dependencies": {
-    "clivas": "^0.2.0",
+    "chalk": "^2.3.2",
     "commander": "^2.15.1",
     "dlnacasts": "^0.1.0",
     "glob": "^7.0.3",
