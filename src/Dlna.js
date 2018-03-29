@@ -56,6 +56,8 @@ class Dlna {
 
   _bindKeys({ player, server }) {
     let paused = false;
+    const rl = readline.createInterface({ input: process.stdin });
+
     readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
 
@@ -68,8 +70,9 @@ class Dlna {
       if (key.name == 'q' || (key.ctrl && key.name == 'c')) {
         player.stop(() => {
           console.log(chalk.red('Stopped'));
+          rl.close();
           server.close();
-          process.exit(0);
+          process.exit();
         });
       }
     });

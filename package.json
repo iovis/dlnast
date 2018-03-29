@@ -1,6 +1,6 @@
 {
   "name": "dlnast",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Stream your favorite media to a DLNA device in your local network",
   "main": "index.js",
   "bin": {
