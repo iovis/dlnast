@@ -1,7 +1,7 @@
 const Dlnacasts = require('dlnacasts');
 const clivas    = require('clivas');
-const keypress  = require('keypress');
 const ora       = require('ora');
+const readline  = require('readline');
 const sleep     = require('./sleep');
 
 class Dlna {
@@ -54,13 +54,11 @@ class Dlna {
 
   _bindKeys({ player, server }) {
     let paused = false;
-    keypress(process.stdin);
+    readline.emitKeypressEvents(process.stdin);
     process.stdin.setRawMode(true);
 
-    process.stdin.on('keypress', (ch, key) => {
-      if (!key) return;
-
-      if (key.name == 'space') {
+    process.stdin.on('keypress', (character, key) => {
+      if (key.name === 'space') {
         (paused) ? player.resume() : player.pause();
         paused = !paused;
       }
