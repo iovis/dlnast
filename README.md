@@ -22,7 +22,7 @@ $ npm install -g dlnast
     -h, --help              output usage information
 ```
 
-## Example ##
+## Examples ##
 
 The default action streams a video of your choice to the first DLNA device it finds:
 
@@ -34,3 +34,7 @@ If you have more than one device, you can choose from a list with `-l`:
 ```
 $ dlnast -l my_amazing_video.mp4
 ```
+
+## Note on Little Snitch and Homebrew ##
+
+If you're using Homebrew's node and Little Snitch, LS will block node's processes because Homebrew's version is unsigned.
