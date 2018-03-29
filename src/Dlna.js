@@ -1,6 +1,7 @@
 const Dlnacasts = require('dlnacasts');
 const clivas    = require('clivas');
 const keypress  = require('keypress');
+const ora       = require('ora');
 const sleep     = require('./sleep');
 
 class Dlna {
@@ -10,7 +11,12 @@ class Dlna {
   }
 
   start({ video, subtitles, server }) {
-    this.dlnacasts.on('update', player => this.startPlayer({ player, video, subtitles, server }));
+    const spinner = ora('Searching for devices...').start();
+
+    this.dlnacasts.once('update', player => {
+      spinner.stop();
+      this.startPlayer({ player, video, subtitles, server });
+    });
   }
 
   searchPlayers() {
