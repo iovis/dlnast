@@ -89,7 +89,7 @@ class CLI {
     spinner.stop();
 
     if (players.length === 0) {
-      console.log(chalk.red("Couldn't find any devices"));
+      console.log(chalk.red('Couldn\'t find any devices'));
       process.exit();
     }
 
