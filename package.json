@@ -11,17 +11,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iovis9/dlnast.git"
+    "url": "git+https://github.com/iovis/dlnast.git"
   },
   "keywords": [
     "dlna"
   ],
-  "author": "David Marchante <davidmarchan@gmail.com> (https://github.com/iovis9)",
+  "author": "David Marchante <davidmarchan@gmail.com> (https://github.com/iovis)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/iovis9/dlnast/issues"
+    "url": "https://github.com/iovis/dlnast/issues"
   },
-  "homepage": "https://github.com/iovis9/dlnast",
+  "homepage": "https://github.com/iovis/dlnast",
   "dependencies": {
     "chalk": "^2.3.2",
     "commander": "^2.15.1",
